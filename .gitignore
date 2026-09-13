@@ -1,0 +1,28 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Test and report artifacts
+allure-results*/
+allure-report*/
+test-results/
+playwright-report/
+coverage.xml
+.coverage
+htmlcov/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

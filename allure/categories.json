@@ -1,0 +1,22 @@
+[
+  {
+    "name": "Known product defect",
+    "matchedStatuses": ["failed"],
+    "traceRegex": ".*(test_unknown_target_is_explicitly_accounted_for|test_update_core_services_changes_selected_device_state|test_missing_command_version_is_rejected_before_dispatch).*"
+  },
+  {
+    "name": "Authentication or authorization failure",
+    "matchedStatuses": ["failed", "broken"],
+    "messageRegex": ".*(Unauthorized|authentication|authorization|token).*"
+  },
+  {
+    "name": "API contract or response-schema failure",
+    "matchedStatuses": ["failed"],
+    "messageRegex": ".*(status|response|device|version|page|field).*"
+  },
+  {
+    "name": "Test environment or missing precondition",
+    "matchedStatuses": ["broken", "skipped"],
+    "messageRegex": ".*(required|available|fixture|DATABASE_URL|approval).*"
+  }
+]
