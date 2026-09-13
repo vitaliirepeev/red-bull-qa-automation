@@ -16,7 +16,7 @@ tests/ ──► helpers/ ──► clients/ ──► live QA API
 
 - `clients/request_wrapper.py` contains the custom `ApiRequestWrapper`; endpoint clients call its `send()` method instead of calling `requests` directly.
 - `helpers/` contains reusable business-shaped payloads and assertions.
-- `database/` is deliberately read-only and schema-neutral until the real schema is reviewed.
+- `tests/database/` is deliberately read-only and schema-neutral until the real schema is reviewed.
 - `configs/` derives the environment from variables.
 - `tests/` stays short and expresses behavior.
 - Every HTTP exchange is an `allure.step` and records UTC send/receive timestamps, method, URL, sanitized body, status, response, and elapsed milliseconds in an attached JSON document.
@@ -26,7 +26,7 @@ tests/ ──► helpers/ ──► clients/ ──► live QA API
 
 ## Run
 
-From `automation/python-api`:
+From the repository root:
 
 ```powershell
 py -m venv .venv
@@ -59,15 +59,27 @@ On Windows, follow the official installation guide: <https://allurereport.org/do
 Useful small runs:
 
 ```powershell
-pytest -m "api and not state_changing" --alluredir=allure-results
+.\.venv\Scripts\python.exe .\scripts\run_api_tests.py
+pytest -n 5 -m "api and not state_changing" --alluredir=allure-results
+pytest -n 5 -m "ui and not state_changing" --alluredir=allure-results-ui
 pytest -m contract --alluredir=allure-results
 pytest -m database --alluredir=allure-results
 pytest -m known_defect --alluredir=allure-results
 ```
 
+The single `run_api_tests.py` command runs the complete API suite in two phases: tests without `pytest.mark.serial` first use five workers, then tests marked `pytest.mark.serial` use one worker. Both phases write into the same Allure results directory, and the serial phase still runs when the parallel phase finds a failure. The script returns a failing exit code when either phase fails. Running it through the virtual-environment Python avoids Windows PowerShell execution-policy restrictions.
+
+`pytest-xdist` provides `-n 5`, which distributes parallel-safe tests across five worker processes. To run only the ordered tests manually, use:
+
+```powershell
+pytest -n 0 -m "api and serial" --alluredir=allure-results-state
+```
+
 The missing-authorization test is read-only. Known regressions use the `known_defect` marker but remain ordinary failing tests, so current QA defects make the run visibly red. The missing-version and command-state examples are skipped unless state-changing tests are explicitly enabled.
 
-The command-state regression fetches the complete inventory, selects an Online device whose observable adsync version is below the configured command version, sends `update_core_services`, fetches the inventory again, and compares the actual adsync version. It changes QA state and must run only with explicit approval.
+The command-state coverage is split into two parameterized tests: one starts with a dedicated up-to-date Online device and one with a dedicated outdated Online device. Each test runs the cases in downgrade, current-version, then upgrade order. Immediately before every command, it retrieves `GET /api/devices/{id}` and discovers the complete `core_services_versions` map instead of hard-coding service names. The current working expectation is that downgrade and current-version commands leave every reported `current` version unchanged across three checks, three seconds apart. The upgrade case retries up to three times, waiting three seconds between attempts, and passes when at least one reported `current` version differs from its immediate before-command value. It does not assume that the resulting versions equal the API's `latest` values.
+
+Configure `QA_UP_TO_DATE_DEVICE_ID`, `QA_OUTDATED_DEVICE_ID`, `QA_DOWNGRADE_COMMAND_VERSION`, `QA_CURRENT_COMMAND_VERSION`, and `QA_UPGRADE_COMMAND_VERSION` with dedicated, approved QA fixtures and versions. The cases carry the `serial` marker and must not run concurrently because their state transitions are ordered. Restore the fixtures before rerunning a complete sequence. Product/Development should confirm the working no-op contract for downgrade and current-version commands. These tests change QA state and must run only with explicit approval.
 
 Positive coverage also parameterizes the regular QA and admin demo accounts. It verifies successful authentication and protected Devices access for both roles, then checks the list response shape, required device fields, and valid first/second-page behavior. Passwords and tokens are hidden from object representations and Allure attachments.
 
@@ -109,9 +121,9 @@ The Email text in the current UI is not programmatically associated with its inp
 2. Add domain-specific SQLAlchemy models only after inspecting the real schema; keep DB assertions read-only where possible.
 3. Add command lifecycle helpers once a disposable device, observable before/after state, and cleanup path exist.
 4. Add response-schema validation and per-device batch-result assertions after Product/Development answers the open questions.
-5. Split parallel-safe and stand-global tests with markers when the suite grows; do not add distributed execution yet.
+5. Keep stand-global or ordered state-changing tests marked `serial` and outside distributed runs.
 6. Add CI and Allure history only after this local example is stable.
-7. Choose a browser-automation layer later, after backend behavior is reliable; it is intentionally outside this brief package.
+7. Expand the small Playwright smoke layer only after backend behavior is reliable and stable enough to support broader end-to-end coverage.
 
 ## Intentional omissions
 
@@ -121,7 +133,7 @@ The Email text in the current UI is not programmatically associated with its inp
 - No large base-class hierarchy: introduce domain bases only when repeated setup/assertions justify them.
 
 
-.\.venv\Scripts\python.exe -m pytest -m api -q --alluredir=allure-results --clean-alluredir
-.\.venv\Scripts\python.exe -m pytest -m ui -q --browser chromium --alluredir=allure-results --clean-alluredir
+.\.venv\Scripts\python.exe -m pytest -n 5 -m "api and not state_changing" -q --alluredir=allure-results --clean-alluredir
+.\.venv\Scripts\python.exe -m pytest -n 5 -m ui -q --browser chromium --alluredir=allure-results --clean-alluredir
 .\.venv\Scripts\python.exe -m pytest -m ui -q --browser chromium --headed --slowmo 300 --alluredir=allure-results --clean-alluredir
 allure serve

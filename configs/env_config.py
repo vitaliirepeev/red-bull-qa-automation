@@ -31,6 +31,19 @@ class Settings:
     )
     mutable_device_id: str | None = os.getenv("QA_MUTABLE_DEVICE_ID")
     command_version: str = os.getenv("QA_COMMAND_VERSION", "6.4.10")
+    up_to_date_device_id: str | None = (
+        os.getenv("QA_UP_TO_DATE_DEVICE_ID") or mutable_device_id
+    )
+    outdated_device_id: str | None = os.getenv("QA_OUTDATED_DEVICE_ID")
+    downgrade_command_version: str | None = (
+        os.getenv("QA_DOWNGRADE_COMMAND_VERSION") or None
+    )
+    current_command_version: str | None = (
+        os.getenv("QA_CURRENT_COMMAND_VERSION") or None
+    )
+    upgrade_command_version: str | None = (
+        os.getenv("QA_UPGRADE_COMMAND_VERSION") or None
+    )
     unknown_device_id: str = os.getenv(
         "QA_UNKNOWN_DEVICE_ID", "DOES-NOT-EXIST"
     )

@@ -21,6 +21,14 @@ class DevicesClient:
             params={"page": page, "pageSize": page_size},
         )
 
+    def get_device(
+        self, device_record_id: int, token: str | None = None
+    ) -> ApiExchange:
+        headers = {"Authorization": f"Bearer {token}"} if token else {}
+        return self.api.send(
+            "GET", f"/api/devices/{device_record_id}", headers=headers
+        )
+
     def send_command(
         self, body: dict[str, Any], token: str | None = None
     ) -> ApiExchange:

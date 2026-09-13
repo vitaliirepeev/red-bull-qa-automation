@@ -2,7 +2,7 @@
   {
     "name": "Known product defect",
     "matchedStatuses": ["failed"],
-    "traceRegex": ".*(test_unknown_target_is_explicitly_accounted_for|test_update_core_services_changes_selected_device_state|test_missing_command_version_is_rejected_before_dispatch).*"
+    "traceRegex": ".*(test_unknown_target_is_explicitly_accounted_for|test_update_core_services_versions_for_up_to_date_device|test_update_core_services_versions_for_outdated_device|test_missing_command_version_is_rejected_before_dispatch).*"
   },
   {
     "name": "Authentication or authorization failure",

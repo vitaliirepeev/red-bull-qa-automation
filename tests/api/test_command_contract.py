@@ -41,6 +41,7 @@ def test_unknown_target_is_explicitly_accounted_for(
 @pytest.mark.api
 @pytest.mark.contract
 @pytest.mark.state_changing
+@pytest.mark.serial
 @pytest.mark.known_defect
 def test_missing_command_version_is_rejected_before_dispatch(
     devices, bearer_token, settings

@@ -37,3 +37,33 @@ def find_device(
         (device for device in inventory if device.get("device_id") == device_id),
         None,
     )
+
+
+def core_service_versions(device: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Return every core service and its current/latest versions from the API."""
+    raw_versions = device.get("core_services_versions")
+    assert isinstance(raw_versions, dict) and raw_versions, (
+        "Device response must contain a non-empty core_services_versions object"
+    )
+
+    versions: dict[str, dict[str, Any]] = {}
+    for service_name, service_versions in raw_versions.items():
+        assert isinstance(service_versions, dict), (
+            f"Core service {service_name!r} must contain a version object"
+        )
+        versions[str(service_name)] = {
+            "current": service_versions.get("current"),
+            "latest": service_versions.get("latest"),
+        }
+    return versions
+
+
+def services_not_at_latest(
+    versions: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    return {
+        service_name: service_versions
+        for service_name, service_versions in versions.items()
+        if service_versions.get("latest")
+        and service_versions.get("current") != service_versions.get("latest")
+    }
